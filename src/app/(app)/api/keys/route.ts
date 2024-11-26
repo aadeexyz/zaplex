@@ -1,29 +1,26 @@
 export const runtime = "edge";
 
+import { auth } from "@clerk/nextjs/server";
 import { Unkey } from "@unkey/api";
 import { initDbConnection } from "@/db";
 import { apiKeysTable } from "@/db/schema";
 
 const POST = async (req: Request) => {
-    // const user = await auth();
+    const user = await auth();
 
-    // if (!user.userId) {
-    //     return new Response(
-    //         JSON.stringify({
-    //             error: "Please sign in to generate a key.",
-    //         }),
-    //         {
-    //             status: 401,
-    //             headers: {
-    //                 "Content-Type": "application/json",
-    //             },
-    //         }
-    //     );
-    // }
-
-    const user = {
-        userId: "test-id",
-    };
+    if (!user.userId) {
+        return new Response(
+            JSON.stringify({
+                error: "Please sign in to generate a key.",
+            }),
+            {
+                status: 401,
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            }
+        );
+    }
 
     const body = await req.json();
     const name = body.name;
@@ -67,7 +64,7 @@ const POST = async (req: Request) => {
     }
 
     const db = initDbConnection();
-    const res = await db
+    await db
         .insert(apiKeysTable)
         .values({
             id: created.result.keyId,
@@ -91,8 +88,6 @@ const POST = async (req: Request) => {
                 }
             );
         });
-
-    console.log("res: ",res);
 
     return new Response(
         JSON.stringify({

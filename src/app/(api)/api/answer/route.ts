@@ -178,8 +178,6 @@ const POST = async (req: Request) => {
                         })
                     );
 
-                    console.log(context);
-
                     return context;
                 },
             }),
