@@ -4,7 +4,6 @@ import { generateText, tool } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
 import { z } from "zod";
 import { verifyKey } from "@unkey/api";
-import { tavily } from "@tavily/core";
 import { auth } from "@clerk/nextjs/server";
 import { system } from "@/lib/prompt";
 
@@ -149,19 +148,37 @@ const POST = async (req: Request) => {
                     searchDepth: "basic" | "advanced";
                     excludeDomains?: string[];
                 }) => {
-                    const tvly = tavily({ apiKey: process.env.TAVILY_API_KEY });
-
-                    const data = await tvly.search(query, {
-                        topic: topic,
-                        maxResults: maxResults,
-                        searchDepth: searchDepth,
-                        excludeDomains: excludeDomains,
+                    const res = await fetch("https://api.tavily.com/search", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            api_key: process.env.TAVILY_API_KEY,
+                            query: query,
+                            maxResults: maxResults,
+                            topic: topic,
+                            searchDepth: searchDepth,
+                            excludeDomains: excludeDomains,
+                        }),
                     });
 
-                    const context = data.results.map((result) => ({
-                        title: result.title,
-                        content: result.content,
-                    }));
+                    const data = await res.json();
+
+                    const context = data.results.map(
+                        (result: {
+                            title: string;
+                            url: string;
+                            content: string;
+                            score: number;
+                            raw_content: string | null;
+                        }) => ({
+                            title: result.title,
+                            content: result.content,
+                        })
+                    );
+
+                    console.log(context);
 
                     return context;
                 },
