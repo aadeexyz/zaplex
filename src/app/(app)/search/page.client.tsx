@@ -49,6 +49,17 @@ const ClientSearchPage = () => {
     const defaultRows = 1;
     const maxVisibleRows = 5;
 
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            if (question.trim()) {
+                mutation.mutate();
+            } else {
+                setError("Please enter a question");
+            }
+        }
+    };
+
     const handleInput = (e: ChangeEvent<HTMLTextAreaElement>) => {
         const textarea = e.target;
         textarea.style.height = "auto";
@@ -102,6 +113,7 @@ const ClientSearchPage = () => {
                                 value={question}
                                 ref={textareaRef}
                                 onChange={handleInput}
+                                onKeyDown={handleKeyDown}
                                 rows={defaultRows}
                                 className="min-h-[none] resize-none peer rounded-e-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-primary"
                                 style={{
