@@ -35,20 +35,28 @@ const DELETE = async (
 
     const unkey = new Unkey({ rootKey: process.env.UNKEY_ROOT_KEY as string });
 
-    const deleted = await unkey.keys.delete({ keyId: id });
-
-    if (!deleted || deleted.error) {
-        return new Response("Failed to delete API key", { status: 500 });
-    }
-
-    const deletedKey = await db
+    const unkeyDeletePromise = unkey.keys.delete({ keyId: id });
+    const dbDeletePromise = db
         .delete(apiKeysTable)
         .where(eq(apiKeysTable.id, id))
         .returning()
         .execute();
 
+    const [unkeyDeleteResult, deletedKey] = await Promise.all([
+        unkeyDeletePromise,
+        dbDeletePromise,
+    ]);
+
+    if (!unkeyDeleteResult || unkeyDeleteResult.error) {
+        return new Response("Failed to delete API key from Unkey", {
+            status: 500,
+        });
+    }
+
     if (deletedKey.length === 0) {
-        return new Response("Failed to delete API key", { status: 500 });
+        return new Response("Failed to delete API key from database", {
+            status: 500,
+        });
     }
 
     return new Response(JSON.stringify(deletedKey[0]), { status: 200 });
