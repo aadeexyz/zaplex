@@ -70,6 +70,7 @@ const ClientAPIPage = ({ keys }: ClientAPIPageProps) => {
     const [data, setData] = useState(keys);
     const [newKey, setNewKey] = useState<APIKey | null>(null);
     const [generatingKey, setGeneratingKey] = useState<boolean>(false);
+    const [deletingKey, setDeletingKey] = useState<boolean>(false);
     const [step, setStep] = useState<"new" | "copy" | null>(null);
     const [error, setError] = useState<string | null>(null);
 
@@ -97,6 +98,7 @@ const ClientAPIPage = ({ keys }: ClientAPIPageProps) => {
         },
         onError: (error) => {
             setError(error.message);
+            setGeneratingKey(false);
             console.error(error);
         },
         onSuccess: (data: APIKey) => {
@@ -118,6 +120,7 @@ const ClientAPIPage = ({ keys }: ClientAPIPageProps) => {
 
     const deleteKeyMutation = useMutation({
         mutationFn: async (id: string) => {
+            setDeletingKey(true);
             setError(null);
 
             const response = await fetch(`/api/keys/${id}`, {
@@ -134,10 +137,12 @@ const ClientAPIPage = ({ keys }: ClientAPIPageProps) => {
         },
         onError: (error) => {
             setError(error.message);
+            setDeletingKey(false);
             console.error(error);
         },
         onSuccess: (data: APIKey) => {
             setData((prev) => prev.filter((key) => key.id !== data.id));
+            setDeletingKey(false);
             setError(null);
         },
     });
@@ -214,7 +219,14 @@ const ClientAPIPage = ({ keys }: ClientAPIPageProps) => {
                                                                 )
                                                             }
                                                         >
-                                                            Delete
+                                                            {deletingKey ? (
+                                                                <Loader
+                                                                    className="animate-spin"
+                                                                    size={16}
+                                                                />
+                                                            ) : (
+                                                                "Delete"
+                                                            )}
                                                         </Button>
                                                     </div>
                                                 </DropdownMenuContent>
