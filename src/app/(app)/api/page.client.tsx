@@ -32,6 +32,11 @@ import {
     FormLabel,
     FormMessage,
 } from "@/components/ui/form";
+import {
+    DropdownMenu,
+    DropdownMenuTrigger,
+    DropdownMenuContent,
+} from "@/components/ui/dropdown-menu";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 
@@ -66,9 +71,11 @@ const ClientAPIPage = ({ keys }: ClientAPIPageProps) => {
     const [newKey, setNewKey] = useState<APIKey | null>(null);
     const [generatingKey, setGeneratingKey] = useState<boolean>(false);
     const [step, setStep] = useState<"new" | "copy" | null>(null);
+    const [error, setError] = useState<string | null>(null);
 
-    const mutation = useMutation({
+    const addKeyMutation = useMutation({
         mutationFn: async (body: { name: string }) => {
+            setError(null);
             setNewKey(null);
             setGeneratingKey(true);
 
@@ -89,6 +96,7 @@ const ClientAPIPage = ({ keys }: ClientAPIPageProps) => {
             return result;
         },
         onError: (error) => {
+            setError(error.message);
             console.error(error);
         },
         onSuccess: (data: APIKey) => {
@@ -104,6 +112,33 @@ const ClientAPIPage = ({ keys }: ClientAPIPageProps) => {
                 },
             ]);
             setStep("copy");
+            setError(null);
+        },
+    });
+
+    const deleteKeyMutation = useMutation({
+        mutationFn: async (id: string) => {
+            setError(null);
+
+            const response = await fetch(`/api/keys/${id}`, {
+                method: "DELETE",
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to fetch data");
+            }
+
+            const result = await response.json();
+
+            return result;
+        },
+        onError: (error) => {
+            setError(error.message);
+            console.error(error);
+        },
+        onSuccess: (data: APIKey) => {
+            setData((prev) => prev.filter((key) => key.id !== data.id));
+            setError(null);
         },
     });
 
@@ -111,6 +146,12 @@ const ClientAPIPage = ({ keys }: ClientAPIPageProps) => {
         <Dialog>
             <div className="w-full h-full flex flex-col justify-center items-center">
                 <div className="max-w-[1000px] w-full px-10 space-y-5">
+                    {error && (
+                        <div className="bg-red-100 text-red-700 p-4 rounded-md">
+                            {error}
+                        </div>
+                    )}
+
                     <div className="w-full flex justify-between">
                         <h1 className="text-xl font-semibold">API Keys</h1>
                         <DialogTrigger asChild>
@@ -150,10 +191,34 @@ const ClientAPIPage = ({ keys }: ClientAPIPageProps) => {
                                             {key.calls}
                                         </TableCell>
                                         <TableCell className="text-right">
-                                            <Button variant={"destructive"}>
-                                                <Trash size={16} />
-                                                Delete Key
-                                            </Button>
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button
+                                                        variant={"destructive"}
+                                                    >
+                                                        <Trash size={16} />
+                                                        Delete Key
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent side="top">
+                                                    <div className="flex flex-col">
+                                                        <span className="text-muted-foreground">
+                                                            {"I'm"} sure I want
+                                                            to delete
+                                                        </span>
+                                                        <Button
+                                                            variant="destructive"
+                                                            onClick={() =>
+                                                                deleteKeyMutation.mutate(
+                                                                    key.id
+                                                                )
+                                                            }
+                                                        >
+                                                            Delete
+                                                        </Button>
+                                                    </div>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
                                         </TableCell>
                                     </TableRow>
                                 ))
@@ -165,7 +230,10 @@ const ClientAPIPage = ({ keys }: ClientAPIPageProps) => {
 
             <DialogContent>
                 {step === "new" && (
-                    <NewKey mutation={mutation} generatingKey={generatingKey} />
+                    <NewKey
+                        mutation={addKeyMutation}
+                        generatingKey={generatingKey}
+                    />
                 )}
                 {step === "copy" && newKey && <CopyKey apiKey={newKey} />}
             </DialogContent>
