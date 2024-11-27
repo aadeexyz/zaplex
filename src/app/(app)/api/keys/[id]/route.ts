@@ -1,3 +1,5 @@
+export const runtime = "edge";
+
 import { Unkey } from "@unkey/api";
 import { auth } from "@clerk/nextjs/server";
 import { initDbConnection } from "@/db";
@@ -11,12 +13,7 @@ const DELETE = async (
     const user = await auth();
 
     if (!user.userId) {
-        return {
-            status: 401,
-            body: {
-                message: "Unauthorized",
-            },
-        };
+        return new Response("Unauthorized", { status: 401 });
     }
 
     const db = initDbConnection();
@@ -29,21 +26,11 @@ const DELETE = async (
         .execute();
 
     if (key.length === 0) {
-        return {
-            status: 404,
-            body: {
-                message: "API key not found",
-            },
-        };
+        return new Response("API key not found", { status: 404 });
     }
 
     if (key[0].owner !== user.userId) {
-        return {
-            status: 403,
-            body: {
-                message: "Forbidden",
-            },
-        };
+        return new Response("Forbidden", { status: 403 });
     }
 
     const unkey = new Unkey({ rootKey: process.env.UNKEY_ROOT_KEY as string });
@@ -51,12 +38,7 @@ const DELETE = async (
     const deleted = await unkey.keys.delete({ keyId: id });
 
     if (!deleted || deleted.error) {
-        return {
-            status: 500,
-            body: {
-                message: "Failed to delete API key",
-            },
-        };
+        return new Response("Failed to delete API key", { status: 500 });
     }
 
     const deletedKey = await db
@@ -66,18 +48,10 @@ const DELETE = async (
         .execute();
 
     if (deletedKey.length === 0) {
-        return {
-            status: 500,
-            body: {
-                message: "Failed to delete API key",
-            },
-        };
+        return new Response("Failed to delete API key", { status: 500 });
     }
 
-    return {
-        status: 200,
-        body: deletedKey[0],
-    };
+    return new Response(JSON.stringify(deletedKey[0]), { status: 200 });
 };
 
 export { DELETE };
