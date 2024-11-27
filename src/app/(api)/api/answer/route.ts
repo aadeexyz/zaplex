@@ -15,6 +15,8 @@ const POST = async (req: Request) => {
     let usingKey = false;
     let keyId;
 
+    const db = initDbConnection();
+
     if (!user.userId) {
         const authHeader = req.headers.get("Authorization");
 
@@ -83,6 +85,26 @@ const POST = async (req: Request) => {
 
         usingKey = true;
         keyId = result.keyId;
+
+        const keyData = await db
+            .select()
+            .from(apiKeysTable)
+            .where(eq(apiKeysTable.id, keyId as string))
+            .execute();
+
+        if (keyData.length === 0) {
+            return new Response(
+                JSON.stringify({
+                    error: "Unauthorized",
+                }),
+                {
+                    status: 401,
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                }
+            );
+        }
     }
 
     const body = await req.json();
@@ -201,8 +223,6 @@ const POST = async (req: Request) => {
         });
 
         if (usingKey) {
-            const db = initDbConnection();
-
             await db
                 .update(apiKeysTable)
                 .set({
