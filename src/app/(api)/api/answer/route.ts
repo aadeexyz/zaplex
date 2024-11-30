@@ -136,7 +136,7 @@ const POST = async (req: Request) => {
             model: model,
             maxToolRoundtrips: 3,
             experimental_activeTools: ["web_search"],
-            system: system,
+            system: system(),
             tools: {
                 web_search: tool({
                     description:
