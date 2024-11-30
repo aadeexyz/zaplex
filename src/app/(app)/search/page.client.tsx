@@ -134,7 +134,7 @@ const ClientSearchPage = () => {
                         </button>
                     </div>
 
-                    {(answer || answering) && (
+                    {(answer || answering) && !error && (
                         <div className="flex space-x-2 items-center w-full">
                             <div className="border border-primary bg-primary rounded-full p-1">
                                 <Zap

@@ -45,7 +45,7 @@ export async function AppSidebar() {
                             className="hover:bg-transparent active:bg-transparent pointer-events-none"
                             asChild
                         >
-                            <h1 className="font-bold text-2xl text-primary-foreground">
+                            <h1 className="font-bold text-3xl text-primary-foreground">
                                 Zaplex
                             </h1>
                         </SidebarMenuButton>
@@ -98,7 +98,9 @@ export async function AppSidebar() {
                             >
                                 <DropdownMenuItem>
                                     <SignOutButton>
-                                        <span className="w-full hover:cursor-pointer">Sign Out</span>
+                                        <span className="w-full hover:cursor-pointer">
+                                            Sign Out
+                                        </span>
                                     </SignOutButton>
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
