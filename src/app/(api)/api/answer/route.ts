@@ -1,14 +1,14 @@
 export const runtime = "edge";
 
-import { generateText, tool } from "ai";
+import { generateText } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
-import { z } from "zod";
 import { verifyKey } from "@unkey/api";
 import { auth } from "@clerk/nextjs/server";
 import { eq, sql } from "drizzle-orm";
-import { system } from "@/lib/prompt";
+import { system } from "@/llm/prompt";
 import { initDbConnection } from "@/db";
 import { apiKeysTable } from "@/db/schema";
+import { webSearch, coingeckoDetails, coingeckoPrice } from "@/llm/tools";
 
 const POST = async (req: Request) => {
     const user = await auth();
@@ -135,88 +135,16 @@ const POST = async (req: Request) => {
         const response = await generateText({
             model: model,
             maxToolRoundtrips: 3,
-            experimental_activeTools: ["web_search"],
+            experimental_activeTools: [
+                "web_search",
+                "coingecko_details",
+                "coingecko_price",
+            ],
             system: system(),
             tools: {
-                web_search: tool({
-                    description:
-                        "Search the web for information with the given query, max results and search depth.",
-                    parameters: z.object({
-                        query: z
-                            .string()
-                            .describe(
-                                "The search query to look up on the web."
-                            ),
-                        maxResults: z
-                            .number()
-                            .describe(
-                                "The maximum number of results to return. Default to be used is 10."
-                            ),
-                        topic: z
-                            .enum(["general", "news", "finance"])
-                            .describe(
-                                "The topic type to search for. Default is general."
-                            ),
-                        searchDepth: z
-                            .enum(["basic", "advanced"])
-                            .describe(
-                                "The search depth to use for the search. Default is basic."
-                            ),
-                        excludeDomains: z
-                            .array(z.string())
-                            .describe(
-                                "A list of domains to specifically exclude from the search results. Default is None, which doesn't exclude any domains."
-                            ),
-                    }),
-                    execute: async ({
-                        query,
-                        maxResults,
-                        topic,
-                        searchDepth,
-                        excludeDomains,
-                    }: {
-                        query: string;
-                        maxResults: number;
-                        topic: "general" | "news" | "finance";
-                        searchDepth: "basic" | "advanced";
-                        excludeDomains?: string[];
-                    }) => {
-                        const res = await fetch(
-                            "https://api.tavily.com/search",
-                            {
-                                method: "POST",
-                                headers: {
-                                    "Content-Type": "application/json",
-                                },
-                                body: JSON.stringify({
-                                    api_key: process.env.TAVILY_API_KEY,
-                                    query: query,
-                                    maxResults: maxResults,
-                                    topic: topic,
-                                    searchDepth: searchDepth,
-                                    excludeDomains: excludeDomains,
-                                }),
-                            }
-                        );
-
-                        const data = await res.json();
-
-                        const context = data.results.map(
-                            (result: {
-                                title: string;
-                                url: string;
-                                content: string;
-                                score: number;
-                                raw_content: string | null;
-                            }) => ({
-                                title: result.title,
-                                content: result.content,
-                            })
-                        );
-
-                        return context;
-                    },
-                }),
+                web_search: webSearch,
+                coingecko_details: coingeckoDetails,
+                coingecko_price: coingeckoPrice,
             },
             toolChoice: "auto",
             prompt: question,

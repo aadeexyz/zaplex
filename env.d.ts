@@ -9,6 +9,7 @@ declare global {
         UNKEY_ROOT_KEY: string;
         UNKEY_API_ID: string;
         TAVILY_API_KEY: string;
+        COINGECKO_API_KEY: string;
         DB: D1Database;
     }
 }
