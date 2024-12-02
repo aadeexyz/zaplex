@@ -10,6 +10,8 @@ declare global {
         UNKEY_API_ID: string;
         TAVILY_API_KEY: string;
         COINGECKO_API_KEY: string;
+        TOMORROW_IO_API_KEY: string;
+        TWELVEDATA_API_KEY: string;
         DB: D1Database;
     }
 }
