@@ -36,37 +36,43 @@ const fn = async ({
     searchDepth: "basic" | "advanced";
     excludeDomains?: string[];
 }) => {
-    const res = await fetch("https://api.tavily.com/search", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            api_key: process.env.TAVILY_API_KEY,
-            query: query,
-            maxResults: maxResults,
-            topic: topic,
-            searchDepth: searchDepth,
-            excludeDomains: excludeDomains,
-        }),
-    });
+    try {
+        const res = await fetch("https://api.tavily.com/search", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                api_key: process.env.TAVILY_API_KEY,
+                query: query,
+                maxResults: maxResults,
+                topic: topic,
+                searchDepth: searchDepth,
+                excludeDomains: excludeDomains,
+            }),
+        });
 
-    const data = await res.json();
+        const data = await res.json();
 
-    const context = data.results.map(
-        (result: {
-            title: string;
-            url: string;
-            content: string;
-            score: number;
-            raw_content: string | null;
-        }) => ({
-            title: result.title,
-            content: result.content,
-        })
-    );
+        const context = data.results.map(
+            (result: {
+                title: string;
+                url: string;
+                content: string;
+                score: number;
+                raw_content: string | null;
+            }) => ({
+                title: result.title,
+                content: result.content,
+            })
+        );
 
-    return context;
+        return context;
+    } catch {
+        return {
+            error: "Failed to fetch data from Tavily",
+        };
+    }
 };
 
 export { description, parameters, fn };

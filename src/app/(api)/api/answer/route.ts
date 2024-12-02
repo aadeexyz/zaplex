@@ -8,7 +8,13 @@ import { eq, sql } from "drizzle-orm";
 import { system } from "@/llm/prompt";
 import { initDbConnection } from "@/db";
 import { apiKeysTable } from "@/db/schema";
-import { webSearch, coingeckoDetails, coingeckoPrice } from "@/llm/tools";
+import {
+    webSearch,
+    coingeckoDetails,
+    coingeckoPrice,
+    realtimeWeather,
+    stockPrice,
+} from "@/llm/tools";
 
 const POST = async (req: Request) => {
     const user = await auth();
@@ -139,12 +145,16 @@ const POST = async (req: Request) => {
                 "web_search",
                 "coingecko_details",
                 "coingecko_price",
+                "realtime_weather",
+                "stock_price",
             ],
             system: system(),
             tools: {
                 web_search: webSearch,
                 coingecko_details: coingeckoDetails,
                 coingecko_price: coingeckoPrice,
+                realtime_weather: realtimeWeather,
+                stock_price: stockPrice,
             },
             toolChoice: "auto",
             prompt: question,

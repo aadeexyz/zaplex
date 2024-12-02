@@ -3,8 +3,11 @@ compatibility_date = "2024-07-29"
 compatibility_flags = ["nodejs_compat"]
 pages_build_output_dir = ".vercel/output/static"
 
-[vars]
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY = "pk_test_Zm9uZC1iYWRnZXItNjUuY2xlcmsuYWNjb3VudHMuZGV2JA"
+[env.preview]
+vars = { NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY = "pk_test_Zm9uZC1iYWRnZXItNjUuY2xlcmsuYWNjb3VudHMuZGV2JA" }
+
+[env.production]
+vars = { NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY = "pk_live_Y2xlcmsuYWFkZWUueHl6JA" }
 
 [[ d1_databases ]]
 binding = "DB"
